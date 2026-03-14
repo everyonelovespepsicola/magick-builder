@@ -1,5 +1,7 @@
 # 🧙‍♂️ ImageMagick Command Builder
 
+[![Try it live!](https://img.shields.io/badge/Try%20it%20live!-brightgreen?style=for-the-badge)](https://everyonelovespepsicola.github.io/magick-builder/)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A powerful GUI for visually building complex [ImageMagick](https://imagemagick.org/) command-line strings. This tool acts as a "co-pilot," helping you discover and apply over 100 different options without having to memorize them.
