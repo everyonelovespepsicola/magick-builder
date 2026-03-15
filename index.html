@@ -157,12 +157,18 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-500 mb-1 block tracking-wider">Input File(s) / Drag Target</label>
-                    <input type="text" id="global-input" value="input.jpg" class="w-full bg-[var(--bg-base)] border border-[var(--border-color)] px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors h-10 clip-cyber-sm">
+                    <label for="global-input" class="text-[10px] uppercase font-bold text-gray-500 mb-1 block tracking-wider">Input File(s) / Drag Target</label>
+                    <div class="flex" id="input-format-container">
+                        <input type="text" id="global-input" value="input.jpg" class="w-full bg-[var(--bg-base)] border border-r-0 border-[var(--border-color)] px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors h-10" style="clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);">
+                        <!-- Dropdown will be injected here -->
+                    </div>
                 </div>
                 <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-500 mb-1 block tracking-wider">Output File / Format</label>
-                    <input type="text" id="global-output" value="output.png" class="w-full bg-[var(--bg-base)] border border-[var(--border-color)] px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors h-10 clip-cyber-sm">
+                    <label for="global-output" class="text-[10px] uppercase font-bold text-gray-500 mb-1 block tracking-wider">Output File / Format</label>
+                    <div class="flex" id="output-format-container">
+                        <input type="text" id="global-output" value="output.png" class="w-full bg-[var(--bg-base)] border border-r-0 border-[var(--border-color)] px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors h-10" style="clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);">
+                        <!-- Dropdown will be injected here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -680,6 +686,63 @@
             }
         }
 
+        function initFormatDropdowns() {
+            const formats = ['JPG', 'PNG', 'GIF', 'WEBP', 'TIFF', 'BMP', 'SVG', 'PDF', 'ICO', 'AVIF', 'JXL'];
+            
+            const createDropdown = (containerId, inputId) => {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                const input = document.getElementById(inputId);
+                
+                const dropdownWrapper = document.createElement('div');
+                dropdownWrapper.className = 'relative';
+
+                const button = document.createElement('button');
+                button.type = 'button'; // Prevent form submission if it were in a form
+                button.className = 'h-10 bg-[var(--border-color)] hover:bg-gray-700 text-gray-300 px-3 transition-colors clip-cyber-sm border border-l-0 border-[var(--border-color)] flex items-center gap-1 shrink-0';
+                button.innerHTML = `
+                    <span class="text-xs font-bold uppercase" id="${inputId}-format-label">Ext</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                `;
+
+                const menu = document.createElement('div');
+                menu.className = 'absolute right-0 mt-2 w-32 bg-[var(--bg-panel)] border border-[var(--border-color)] shadow-2xl z-20 hidden clip-cyber format-dropdown-menu';
+                menu.innerHTML = `<div class="p-1 max-h-60 overflow-y-auto"></div>`;
+                const menuContent = menu.querySelector('div');
+
+                formats.forEach(format => {
+                    const item = document.createElement('a');
+                    item.href = '#';
+                    item.className = 'block px-3 py-1.5 text-sm text-gray-300 hover:bg-[var(--accent)] hover:text-[var(--text-on-accent)] transition-colors font-mono';
+                    item.textContent = format;
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const currentVal = input.value;
+                        const dotIndex = currentVal.lastIndexOf('.');
+                        const baseName = dotIndex !== -1 ? currentVal.substring(0, dotIndex) : currentVal;
+                        input.value = `${baseName}.${format.toLowerCase()}`;
+                        updateCommand();
+                        menu.classList.add('hidden');
+                    });
+                    menuContent.appendChild(item);
+                });
+
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.format-dropdown-menu').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
+                    menu.classList.toggle('hidden');
+                });
+
+                dropdownWrapper.appendChild(button);
+                dropdownWrapper.appendChild(menu);
+                container.appendChild(dropdownWrapper);
+            };
+
+            createDropdown('input-format-container', 'global-input');
+            createDropdown('output-format-container', 'global-output');
+            document.addEventListener('click', () => { document.querySelectorAll('.format-dropdown-menu').forEach(menu => menu.classList.add('hidden')); });
+        }
+
         // Generate the final CLI command string
         function updateCommand() {
             const inputPath = document.getElementById('global-input').value.trim() || 'input.jpg';
@@ -718,6 +781,21 @@
 
             cmdParts.push(outputPath);
             document.getElementById('command-output').textContent = cmdParts.join(' ');
+
+            // Update format dropdown labels
+            const formats = ['JPG', 'PNG', 'GIF', 'WEBP', 'TIFF', 'BMP', 'SVG', 'PDF', 'ICO', 'AVIF', 'JXL'];
+            ['global-input', 'global-output'].forEach(inputId => {
+                const input = document.getElementById(inputId);
+                const formatLabel = document.getElementById(`${inputId}-format-label`);
+                if (input && formatLabel) {
+                    const currentExt = (input.value.split('.').pop() || '').toUpperCase();
+                    if (formats.includes(currentExt)) {
+                        formatLabel.textContent = currentExt;
+                    } else {
+                        formatLabel.textContent = 'Ext';
+                    }
+                }
+            });
         }
 
         // Initialize the Help Modal content
@@ -1294,6 +1372,7 @@
         // Bootstrap
         document.addEventListener('DOMContentLoaded', () => {
             init();
+            initFormatDropdowns();
             updateCommand();
             initModeToggle();
         });
