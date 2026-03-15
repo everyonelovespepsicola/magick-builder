@@ -242,13 +242,12 @@
                 </button>
             </div>
             <div class="overflow-y-auto p-4 md:p-6 space-y-6">
-                <p class="text-gray-300">Your command is ready to convert all images and save them into a new <code class="font-mono text-sm bg-[var(--bg-base)] text-[var(--accent)] px-1.5 py-0.5 border border-[var(--border-color)] clip-cyber-sm">output</code> folder.</p>
+                <p class="text-gray-300">The batch command has been <b class="text-[var(--accent)]">copied to your clipboard</b>. It is ready to process your images and save them into a new <code class="font-mono text-sm bg-[var(--bg-base)] text-[var(--accent)] px-1.5 py-0.5 border border-[var(--border-color)] clip-cyber-sm">output</code> folder.</p>
                 <div class="space-y-3">
                     <h3 class="text-md font-bold text-gray-200 uppercase tracking-wider">Next Steps:</h3>
                     <ol class="list-decimal list-inside space-y-4 text-gray-400">
-                        <li>Click the <b class="text-gray-200">Copy CLI</b> button to copy the generated command.</li>
                         <li>Open a terminal (like PowerShell or Command Prompt) <b class="text-gray-200">in the same directory as your original images</b>.</li>
-                        <li>Paste the command into the terminal and press Enter to begin processing.</li>
+                        <li><b class="text-gray-200">Paste the command</b> into the terminal and press Enter to begin processing.</li>
                     </ol>
                 </div>
             </div>
@@ -1136,12 +1135,19 @@
                 previewPlaceholder.innerHTML = fileListHtml;
 
                 if (isSimpleMode) {
-                    document.getElementById('simple-mode-convert-btn')?.addEventListener('click', () => {
+                    document.getElementById('simple-mode-convert-btn')?.addEventListener('click', (e) => {
+                        const convertBtn = e.target;
+                        convertBtn.textContent = 'COPIED!';
+                        convertBtn.style.background = '#22c55e';
+                        convertBtn.disabled = true;
+
                         const outputCtrl = document.getElementById('global-output');
                         const currentOutExt = outputCtrl.value.split('.').pop() || 'png';
                         outputCtrl.value = `output/converted-%d.${currentOutExt}`;
                         updateCommand();
-                        showSimpleModeBatchPopup();
+
+                        const cmdText = document.getElementById('command-output').textContent;
+                        navigator.clipboard.writeText(cmdText).then(() => showSimpleModeBatchPopup());
                     });
                 }
 
