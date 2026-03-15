@@ -151,7 +151,7 @@
                             Copy CLI
                         </button>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2 pl-1">Note: The generated command requires <a href="#" id="show-help-install" class="text-[var(--accent)] hover:underline">ImageMagick to be installed</a> to work.</p>
+                    <p class="text-xs text-gray-500 mt-2 pl-1">This tool builds the command. You must paste and run it in your own terminal. <a href="#" id="show-help-install" class="text-[var(--accent)] hover:underline">Requires ImageMagick installation.</a></p>
                 </div>
             </div>
 
@@ -254,7 +254,10 @@
                 <div class="space-y-3">
                     <h3 class="text-md font-bold text-gray-200 uppercase tracking-wider">To Proceed:</h3>
                     <ol class="list-decimal list-inside space-y-4 text-gray-400">
-                        <li>Open a terminal (like PowerShell or Command Prompt) <b class="text-gray-200">in the same directory as your original images</b>.</li>
+                        <li>
+                            Open a terminal (like PowerShell or Command Prompt) <b class="text-gray-200">in the same directory as your original images</b>.
+                            <p class="text-xs text-gray-500 mt-1 pl-6">(Why? For security, browsers don't provide apps with absolute file paths, so the command must be run from the correct folder.)</p>
+                        </li>
                         <li><b class="text-gray-200">Paste the command</b> and press Enter to begin.</li>
                     </ol>
                 </div>
