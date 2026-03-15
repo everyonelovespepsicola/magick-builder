@@ -42,6 +42,15 @@
         ::-webkit-scrollbar-track { background: var(--bg-base); }
         ::-webkit-scrollbar-thumb { background: #374151; border-radius: 0px; }
         ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+        /* Mode Toggling Styles */
+        .simple-mode #settings-container {
+            display: none;
+        }
+        .simple-mode #preview-panel {
+            width: 100% !important; /* Override Tailwind's responsive classes */
+            border-right-width: 0;
+        }
         
         /* Cross-Browser Sleek Range Sliders */
         input[type=range] {
@@ -109,7 +118,7 @@
         }
     </style>
 </head>
-<body class="text-gray-300 font-sans h-screen flex flex-col overflow-hidden antialiased">
+<body class="text-gray-300 font-sans h-screen flex flex-col overflow-hidden antialiased simple-mode">
 
     <!-- Drag & Drop Overlay -->
     <div id="drop-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center border-4 border-dashed border-[var(--accent)] pointer-events-none transition-all duration-200">
@@ -121,14 +130,17 @@
     <!-- Sticky Header containing the Command Output -->
     <header class="bg-[var(--bg-panel)] border-b border-[var(--border-color)] p-3 md:p-5 shrink-0 shadow-2xl z-50">
         <div class="w-full">
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
-                <h1 class="text-lg md:text-xl font-bold text-[var(--accent)] flex items-center gap-2 shrink-0 uppercase tracking-widest">
-                    <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
-                    Magick Builder
-                    <button id="help-btn" class="ml-2 text-gray-500 hover:text-[var(--accent)] transition-colors bg-[var(--bg-base)] p-1.5 rounded-full border border-[var(--border-color)]" title="Help / Documentation">
-                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </button>
-                </h1>
+            <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
+                <div class="flex items-center gap-4 shrink-0">
+                    <h1 class="text-lg md:text-xl font-bold text-[var(--accent)] flex items-center gap-2 uppercase tracking-widest">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+                        Magick Builder
+                        <button id="help-btn" class="ml-2 text-gray-500 hover:text-[var(--accent)] transition-colors bg-[var(--bg-base)] p-1.5 rounded-full border border-[var(--border-color)]" title="Help / Documentation">
+                            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </button>
+                    </h1>
+                    <button id="mode-toggle-btn" class="text-xs font-bold text-[var(--accent)] border border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--text-on-accent)] px-3 py-2 transition-colors uppercase tracking-wider clip-cyber-sm whitespace-nowrap">Advanced Mode</button>
+                </div>
                 
                 <div class="flex-1">
                     <div class="flex flex-col sm:flex-row gap-2 w-full">
@@ -159,7 +171,7 @@
     <!-- Main Content Area split into Preview and Settings -->
     <main class="flex-1 flex flex-col lg:flex-row overflow-hidden" style="background: linear-gradient(to right, var(--bg-base) 0%, var(--bg-panel) 50%, var(--bg-base) 100%);">
         <!-- Preview Panel -->
-        <aside class="w-full h-64 lg:h-auto lg:w-1/3 xl:w-1/4 border-b lg:border-b-0 lg:border-r border-[var(--border-color)] bg-transparent flex flex-col relative shrink-0">
+        <aside id="preview-panel" class="w-full h-64 lg:h-auto lg:w-1/3 xl:w-1/4 border-b lg:border-b-0 lg:border-r border-[var(--border-color)] bg-transparent flex flex-col relative shrink-0">
             <div class="p-3 border-b border-[var(--border-color)] bg-[var(--bg-panel)] flex flex-col gap-3 z-10">
                 <div class="flex justify-between items-center w-full">
                     <h2 class="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Image Preview</h2>
@@ -184,11 +196,13 @@
         </aside>
 
         <!-- Settings Grid -->
-        <section class="flex-1 overflow-y-auto p-4 md:p-6">
-            <div id="settings-grid" class="w-full grid grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-4 md:gap-6 pb-20">
-                <!-- Settings panels will be injected here via JS -->
-            </div>
-        </section>
+        <div id="settings-container" class="flex-1 overflow-y-auto">
+            <section class="p-4 md:p-6">
+                <div id="settings-grid" class="w-full grid grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-4 md:gap-6 pb-20">
+                    <!-- Settings panels will be injected here via JS -->
+                </div>
+            </section>
+        </div>
     </main>
 
     <!-- Help Menu Overlay -->
@@ -1171,10 +1185,33 @@
             return entries;
         }
 
+        function initModeToggle() {
+            const body = document.body;
+            const toggleBtn = document.getElementById('mode-toggle-btn');
+
+            if (!toggleBtn) return;
+
+            const updateBtnText = () => {
+                if (body.classList.contains('simple-mode')) {
+                    toggleBtn.textContent = 'Advanced Mode';
+                } else {
+                    toggleBtn.textContent = 'Simple Mode';
+                }
+            };
+
+            toggleBtn.addEventListener('click', () => {
+                body.classList.toggle('simple-mode');
+                updateBtnText();
+            });
+
+            updateBtnText(); // Set initial text
+        }
+
         // Bootstrap
         document.addEventListener('DOMContentLoaded', () => {
             init();
             updateCommand();
+            initModeToggle();
         });
     </script>
 </body>
