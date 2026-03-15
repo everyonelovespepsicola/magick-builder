@@ -223,6 +223,32 @@
         </div>
     </div>
 
+    <!-- Simple Mode Batch Popup -->
+    <div id="simple-batch-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[150] hidden items-center justify-center p-4 transition-opacity">
+        <div class="bg-[var(--bg-panel)] border border-[var(--border-color)] shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col clip-cyber">
+            <div class="flex items-center justify-between p-4 md:p-6 border-b border-[var(--border-color)]">
+                <h2 class="text-xl font-bold text-[var(--accent)] flex items-center gap-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 15l3-3 3 3-1.813.904M9 15v-3a3 3 0 013-3h0a3 3 0 013 3v3m-6 0h6m-6 0H6a2 2 0 01-2-2v-6a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2h-3"></path></svg>
+                    Batch Command Ready
+                </h2>
+                <button id="close-simple-batch-btn" class="text-gray-500 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="overflow-y-auto p-4 md:p-6 space-y-6">
+                <p class="text-gray-300">Your command is ready to convert all images and save them into a new <code class="font-mono text-sm bg-[var(--bg-base)] text-[var(--accent)] px-1.5 py-0.5 border border-[var(--border-color)] clip-cyber-sm">output</code> folder.</p>
+                <div class="space-y-3">
+                    <h3 class="text-md font-bold text-gray-200 uppercase tracking-wider">Next Steps:</h3>
+                    <ol class="list-decimal list-inside space-y-4 text-gray-400">
+                        <li>Click the <b class="text-gray-200">Copy CLI</b> button to copy the generated command.</li>
+                        <li>Open a terminal (like PowerShell or Command Prompt) <b class="text-gray-200">in the same directory as your original images</b>.</li>
+                        <li>Paste the command into the terminal and press Enter to begin processing.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-4 right-4 flex flex-col gap-3 z-[200]"></div>
 
@@ -948,6 +974,31 @@
             }
         }
 
+        function showSimpleModeBatchPopup() {
+            const overlay = document.getElementById('simple-batch-overlay');
+            if (!overlay) return;
+
+            const closeBtn = document.getElementById('close-simple-batch-btn');
+
+            const toggleOverlay = () => {
+                overlay.classList.toggle('hidden');
+                overlay.classList.toggle('flex');
+            };
+
+            // Show it
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+
+            // Add listeners only once
+            if (!closeBtn.dataset.listener) {
+                closeBtn.addEventListener('click', toggleOverlay);
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) toggleOverlay();
+                });
+                closeBtn.dataset.listener = 'true';
+            }
+        }
+
         function handleImageFiles(imageFiles) {
             if (imageFiles.length === 0) {
                 showToast('No valid image files were found in the selection.', 'error');
@@ -969,28 +1020,50 @@
                 const truncated = imageFiles.length > displayLimit;
                 const filesToList = truncated ? imageFiles.slice(0, displayLimit) : imageFiles;
 
+                const isSimpleMode = document.body.classList.contains('simple-mode');
+
+                const convertButtonHtml = isSimpleMode ? `
+                    <div class="p-4 border-t border-[var(--border-color)] bg-[var(--bg-panel)]">
+                        <button id="simple-mode-convert-btn" class="w-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--text-on-accent)] px-6 py-4 font-bold uppercase tracking-wider text-lg transition-colors shadow-lg clip-cyber">
+                            Convert
+                        </button>
+                    </div>
+                ` : '';
+
                 const fileListHtml = `
-                    <div class="text-left w-full h-full overflow-y-auto p-2 bg-[var(--bg-base)]">
-                        <h3 class="text-sm font-bold text-gray-400 mb-2 sticky top-0 bg-inherit py-1 px-1 border-b border-[var(--border-color)]">${imageFiles.length} Images in Batch:</h3>
-                        <ul class="text-xs font-mono text-gray-500 space-y-1 pt-1 px-1">
-                            ${filesToList.map(f => `<li class="truncate" title="${f.name}">${f.name}</li>`).join('')}
-                            ${truncated ? `<li class="text-gray-600 mt-2">... and ${imageFiles.length - displayLimit} more files.</li>` : ''}
-                        </ul>
+                    <div class="text-left w-full h-full flex flex-col bg-[var(--bg-base)]">
+                        <div class="p-2 border-b border-[var(--border-color)]">
+                           <h3 class="text-sm font-bold text-gray-400 py-1 px-1">${imageFiles.length} Images in Batch:</h3>
+                        </div>
+                        <div class="overflow-y-auto p-2 flex-1">
+                            <ul class="text-xs font-mono text-gray-500 space-y-1 pt-1 px-1">
+                                ${filesToList.map(f => `<li class="truncate" title="${f.name}">${f.name}</li>`).join('')}
+                                ${truncated ? `<li class="text-gray-600 mt-2">... and ${imageFiles.length - displayLimit} more files.</li>` : ''}
+                            </ul>
+                        </div>
+                        ${convertButtonHtml}
                     </div>
                 `;
                 previewPlaceholder.innerHTML = fileListHtml;
 
-                const firstFile = imageFiles[0];
+                if (isSimpleMode) {
+                    document.getElementById('simple-mode-convert-btn')?.addEventListener('click', () => {
+                        const outputCtrl = document.getElementById('global-output');
+                        const currentOutExt = outputCtrl.value.split('.').pop() || 'png';
+                        outputCtrl.value = `output/converted-%d.${currentOutExt}`;
+                        updateCommand();
+                        showSimpleModeBatchPopup();
+                    });
+                }
+
                 const inputCtrl = document.getElementById('global-input');
                 const outputCtrl = document.getElementById('global-output');
                 const currentOutExt = outputCtrl.value.split('.').pop() || 'png';
-                // Try to find a common extension, otherwise use the first one
                 const exts = [...new Set(imageFiles.map(f => f.name.split('.').pop() || ''))];
                 const commonExt = exts.length === 1 && exts[0] ? exts[0] : (imageFiles[0].name.split('.').pop() || 'jpg');
-
                 inputCtrl.value = `*.${commonExt}`;
                 outputCtrl.value = `converted-%d.${currentOutExt}`;
-                updateCommand();
+                updateCommand(); // Update command after setting paths
 
             } else if (imageFiles.length === 1) { // Single file
                 loadPreview(imageFiles[0], false);
