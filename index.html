@@ -235,19 +235,27 @@
             <div class="flex items-center justify-between p-4 md:p-6 border-b border-[var(--border-color)]">
                 <h2 class="text-xl font-bold text-[var(--accent)] flex items-center gap-3">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 15l3-3 3 3-1.813.904M9 15v-3a3 3 0 013-3h0a3 3 0 013 3v3m-6 0h6m-6 0H6a2 2 0 01-2-2v-6a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2h-3"></path></svg>
-                    Batch Command Ready
+                    Confirm Batch Conversion
                 </h2>
                 <button id="close-simple-batch-btn" class="text-gray-500 hover:text-white transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
             <div class="overflow-y-auto p-4 md:p-6 space-y-6">
-                <p class="text-gray-300">The batch command has been <b class="text-[var(--accent)]">copied to your clipboard</b>. It is ready to process your images and save them into a new <code class="font-mono text-sm bg-[var(--bg-base)] text-[var(--accent)] px-1.5 py-0.5 border border-[var(--border-color)] clip-cyber-sm">output</code> folder.</p>
+                <p class="text-gray-300">You are about to process <b id="simple-batch-image-count" class="text-[var(--accent)]">...</b> images. The required command has been copied to your clipboard.</p>
+                <div class="space-y-3 p-4 bg-[var(--bg-base)] border border-[var(--border-color)] clip-cyber-sm">
+                    <h3 class="text-md font-bold text-gray-200">When you run the command, it will:</h3>
+                    <ul class="list-disc list-inside space-y-2 text-gray-400 text-sm">
+                        <li>Create a new folder named <code class="font-mono text-xs bg-[var(--bg-panel)] text-[var(--accent)] px-1.5 py-0.5">output</code> inside your image directory.</li>
+                        <li>Convert each image using your selected settings.</li>
+                        <li>Save the new files into the <code class="font-mono text-xs bg-[var(--bg-panel)] text-[var(--accent)] px-1.5 py-0.5">output</code> folder, leaving your original files untouched.</li>
+                    </ul>
+                </div>
                 <div class="space-y-3">
-                    <h3 class="text-md font-bold text-gray-200 uppercase tracking-wider">Next Steps:</h3>
+                    <h3 class="text-md font-bold text-gray-200 uppercase tracking-wider">To Proceed:</h3>
                     <ol class="list-decimal list-inside space-y-4 text-gray-400">
                         <li>Open a terminal (like PowerShell or Command Prompt) <b class="text-gray-200">in the same directory as your original images</b>.</li>
-                        <li><b class="text-gray-200">Paste the command</b> into the terminal and press Enter to begin processing.</li>
+                        <li><b class="text-gray-200">Paste the command</b> and press Enter to begin.</li>
                     </ol>
                 </div>
             </div>
@@ -1062,9 +1070,15 @@
             }
         }
 
-        function showSimpleModeBatchPopup() {
+        function showSimpleModeBatchPopup(imageCount = 0) {
             const overlay = document.getElementById('simple-batch-overlay');
             if (!overlay) return;
+
+            // Update the image count in the popup
+            const countEl = document.getElementById('simple-batch-image-count');
+            if (countEl) {
+                countEl.textContent = imageCount;
+            }
 
             const closeBtn = document.getElementById('close-simple-batch-btn');
 
@@ -1147,7 +1161,7 @@
                         updateCommand();
 
                         const cmdText = document.getElementById('command-output').textContent;
-                        navigator.clipboard.writeText(cmdText).then(() => showSimpleModeBatchPopup());
+                        navigator.clipboard.writeText(cmdText).then(() => showSimpleModeBatchPopup(imageFiles.length));
                     });
                 }
 
