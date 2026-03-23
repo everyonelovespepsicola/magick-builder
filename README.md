@@ -2,6 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+![PowerShell Magick Builder Interface](image01.jpg)
+
 A powerful, native Windows GUI for visually building and executing complex [ImageMagick](https://imagemagick.org/) commands, completely contained within PowerShell scripts. 
 
 ## 📖 Overview
