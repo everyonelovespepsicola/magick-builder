@@ -1206,28 +1206,59 @@ function Show-CropWindow {
     $cropXaml = @"
     <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-            Title="Interactive Develop &amp; Crop Tool" Width="950" Height="700" WindowStartupLocation="CenterOwner" Background="{DynamicResource AppBackgroundBrush}" Foreground="{DynamicResource AppForegroundBrush}">
-        <Grid Margin="10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="320"/>
-            </Grid.ColumnDefinitions>
+            Title="Interactive Develop &amp; Crop Tool" Width="950" Height="700" WindowStartupLocation="CenterOwner" 
+            WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="CanResizeWithGrip" Foreground="{DynamicResource AppForegroundBrush}">
+        <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" Background="{DynamicResource AppBackgroundBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/> <!-- Custom Title Bar -->
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Custom Draggable Title Bar -->
+                <Grid Grid.Row="0" x:Name="CropTitleBar" Background="Transparent">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Interactive Develop &amp; Crop Tool" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{DynamicResource TitleBarTextBrush}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button x:Name="CropMaximizeButton" Style="{DynamicResource WindowControlButton}" ToolTip="Maximize"><Path Data="M0,0 H10 V10 H0 Z" Stroke="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/></Button>
+                        <Button x:Name="CropCloseButton" Style="{DynamicResource WindowCloseButton}" ToolTip="Close"><Path Data="M0,0 L10,10 M0,10 L10,0" Stroke="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.5"/></Button>
+                    </StackPanel>
+                </Grid>
+
+                <Grid Grid.Row="1" Margin="10,0,10,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="320"/>
+                    </Grid.ColumnDefinitions>
             
             <Border Grid.Column="0" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" Background="{DynamicResource AppBackgroundBrush}" Margin="0,0,10,0">
-                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                    <Viewbox Stretch="Uniform">
-                        <Canvas x:Name="CropCanvas" Cursor="Cross" Background="Transparent">
+                <ScrollViewer x:Name="CropScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                    <Canvas x:Name="CropCanvas" Cursor="Cross" Background="Transparent" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        <Canvas.LayoutTransform>
+                            <ScaleTransform x:Name="CropScaleTransform" ScaleX="1" ScaleY="1" />
+                        </Canvas.LayoutTransform>
                             <Image x:Name="CropImage" Stretch="None" />
                             <InkCanvas x:Name="DrawingCanvas" Background="Transparent" IsHitTestVisible="False" />
                             <Rectangle x:Name="CropRect" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeDashArray="4 4" Fill="{DynamicResource AccentBrush}" Opacity="0.2" Visibility="Collapsed" />
                         </Canvas>
-                    </Viewbox>
                 </ScrollViewer>
             </Border>
 
             <Border Grid.Column="1" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1,0,0,0">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="0">
+                        <TextBlock Text="Zoom" FontWeight="Bold" FontSize="16" Margin="15,15,15,5" Foreground="{DynamicResource AccentBrush}"/>
+                        <Grid Margin="15,0,15,5">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <Slider x:Name="SldZoom" Minimum="0.1" Maximum="5" Value="1" TickFrequency="0.1" LargeChange="0.5" SmallChange="0.1" IsSnapToTickEnabled="False" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="ValZoom" Text="100%" Grid.Column="1" Foreground="{DynamicResource AppForegroundBrush}" VerticalAlignment="Center" MinWidth="45" TextAlignment="Right"/>
+                        </Grid>
+                        
+                        <Separator Margin="15,5" Background="{DynamicResource ControlBorderBrush}"/>
+
                         <TextBlock Text="Active Tool" FontWeight="Bold" FontSize="16" Margin="15,15,15,5" Foreground="{DynamicResource AccentBrush}"/>
                         <WrapPanel Margin="15,0,15,5">
                             <RadioButton x:Name="ToolCrop" Content="Crop" IsChecked="True" Margin="0,0,10,5" VerticalAlignment="Center" Foreground="{DynamicResource AppForegroundBrush}"/>
@@ -1364,14 +1395,20 @@ function Show-CropWindow {
                     </StackPanel>
                 </ScrollViewer>
             </Border>
-        </Grid>
-    </Window>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Window>
 "@
     $cropBytes = [System.Text.Encoding]::UTF8.GetBytes($cropXaml)
     $cropStream = New-Object System.IO.MemoryStream(,$cropBytes)
     $cropWindow = [System.Windows.Markup.XamlReader]::Load($cropStream)
     $cropWindow.Owner = $window
     $cropWindow.Resources = $window.Resources
+
+    $CropTitleBar = $cropWindow.FindName("CropTitleBar")
+    $CropMaximizeButton = $cropWindow.FindName("CropMaximizeButton")
+    $CropCloseButton = $cropWindow.FindName("CropCloseButton")
 
     $cImage = $cropWindow.FindName("CropImage")
     $cCanvas = $cropWindow.FindName("CropCanvas")
@@ -1382,6 +1419,10 @@ function Show-CropWindow {
     $valH = $cropWindow.FindName("ValH")
     $valX = $cropWindow.FindName("ValX")
     $valY = $cropWindow.FindName("ValY")
+    $CropScrollViewer = $cropWindow.FindName("CropScrollViewer")
+    $CropScaleTransform = $cropWindow.FindName("CropScaleTransform")
+    $SldZoom = $cropWindow.FindName("SldZoom")
+    $ValZoom = $cropWindow.FindName("ValZoom")
     
     $DrawingCanvas = $cropWindow.FindName("DrawingCanvas")
     $ToolCrop = $cropWindow.FindName("ToolCrop")
@@ -1406,6 +1447,16 @@ function Show-CropWindow {
     $sldSaturation = $cropWindow.FindName("SldSaturation"); $valSaturation = $cropWindow.FindName("ValSaturation")
     $BtnUndoAdjustments = $cropWindow.FindName("BtnUndoAdjustments")
     $BtnResetAdjustments = $cropWindow.FindName("BtnResetAdjustments")
+
+    # Custom Title Bar Logic
+    if ($CropTitleBar) { $CropTitleBar.Add_MouseLeftButtonDown({ $cropWindow.DragMove() }) }
+    if ($CropMaximizeButton) { 
+        $CropMaximizeButton.Add_Click({ 
+            if ($cropWindow.WindowState -eq 'Maximized') { $cropWindow.WindowState = 'Normal' } 
+            else { $cropWindow.WindowState = 'Maximized' } 
+        }) 
+    }
+    if ($CropCloseButton) { $CropCloseButton.Add_Click({ $cropWindow.Close() }) }
 
     # Setup InkCanvas Default Properties
     $DrawingCanvas.DefaultDrawingAttributes.Color = [System.Windows.Media.Colors]::Red
@@ -1453,6 +1504,58 @@ function Show-CropWindow {
         $ValDrawSize.Text = $size
         $DrawingCanvas.DefaultDrawingAttributes.Width = $size
         $DrawingCanvas.DefaultDrawingAttributes.Height = $size
+    }.GetNewClosure())
+
+    # --- Zoom Logic ---
+    $SldZoom.Add_ValueChanged({
+        $zoom = $args[1].NewValue
+        $ValZoom.Text = "$([math]::Round($zoom * 100))%"
+        if ($CropScaleTransform) {
+            $CropScaleTransform.ScaleX = $zoom
+            $CropScaleTransform.ScaleY = $zoom
+        }
+    }.GetNewClosure())
+
+    $CropScrollViewer.Add_PreviewMouseWheel({
+        param($sender, $e)
+        # Zoom only triggers if the Ctrl key is held down
+        if ([System.Windows.Input.Keyboard]::Modifiers -band [System.Windows.Input.ModifierKeys]::Control) {
+            $e.Handled = $true
+            
+            $zoomDelta = if ($e.Delta -gt 0) { 0.1 } else { -0.1 }
+            $oldZoom = $SldZoom.Value
+            $newZoom = [math]::Max($SldZoom.Minimum, [math]::Min($SldZoom.Maximum, $oldZoom + $zoomDelta))
+            
+            if ($oldZoom -eq $newZoom) { return }
+
+            # Store current mouse position so we can zoom cleanly toward the cursor
+            $mousePos = $e.GetPosition($CropScrollViewer)
+            $contentPos = $e.GetPosition($cCanvas)
+
+            $SldZoom.Value = $newZoom
+            
+            # Force layout pass so the scroll viewer updates its total scrollable area
+            $cropWindow.UpdateLayout()
+
+            $newScrollX = ($contentPos.X * $newZoom) - $mousePos.X
+            $newScrollY = ($contentPos.Y * $newZoom) - $mousePos.Y
+
+            $CropScrollViewer.ScrollToHorizontalOffset($newScrollX)
+            $CropScrollViewer.ScrollToVerticalOffset($newScrollY)
+        }
+    }.GetNewClosure())
+
+    $cropWindow.Add_Loaded({
+        # Auto-fit large images inside the scrollviewer on first load
+        $sw = $CropScrollViewer.ActualWidth; $sh = $CropScrollViewer.ActualHeight
+        $iw = $cCanvas.Width; $ih = $cCanvas.Height
+        
+        if ($iw -gt 0 -and $ih -gt 0 -and $sw -gt 0 -and $sh -gt 0) {
+            $minScale = [math]::Min(($sw - 20) / $iw, ($sh - 20) / $ih)
+            if ($minScale -lt 1) {
+                $SldZoom.Value = [math]::Max($SldZoom.Minimum, [math]::Min($SldZoom.Maximum, $minScale))
+            }
+        }
     }.GetNewClosure())
 
     # Setup Live Preview Mechanism
